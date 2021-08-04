@@ -1,0 +1,434 @@
+#outflow analysis and plotting
+rm( list = ls()) #clear env
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(plotrix)
+library(purrr)
+library(cowplot)
+library(plyr)
+
+Zoop_outflow<-as.data.frame(readRDS("Data/Zooper_outflow.rds"))
+Zoop_christina<-select(Zoop_outflow,-geometry)%>%
+  filter(Year>=2010)
+write.csv(Zoop_christina,"Data/Zoop_outflow.csv",row.names = F)
+
+#select year and season range
+Zoop_select<-dplyr::select(Zoop_outflow,-geometry)%>%
+  filter(Stratum!="Western Delta")
+#try doing regression on facets
+library(gridExtra)
+
+common_macro<-c("Hyperacanthomysis longirostris Adult")
+common_meso<-c("Pseudodiaptomus_UnID Juvenile","Eurytemora affinis Juvenile","Bosmina longirostris Adult","Acartiella sinensis Adult","Limnoithona spp. Adult","Pseudodiaptomus forbesi Adult","Pseudodiaptomus_UnID Larva","Eurytemora affinis Adult")
+common_taxa<-c(common_macro,common_meso)
+
+#lets group Limnoithona together (this is really messy, look into ways of streamlining)
+Zoop_select$Taxlifestage<-ifelse(Zoop_select$Taxlifestage=="Limnoithona tetraspina Adult","Limnoithona spp. Adult",Zoop_select$Taxlifestage)
+Zoop_select$Taxlifestage<-ifelse(Zoop_select$Taxlifestage=="Limnoithona sinensis Adult","Limnoithona spp. Adult",Zoop_select$Taxlifestage)
+Zoop_select$Taxlifestage<-ifelse(Zoop_select$Taxlifestage=="Limnoithona_UnID Adult","Limnoithona spp. Adult",Zoop_select$Taxlifestage)
+
+Zoop_select_Limno<-select(Zoop_select,-Taxname,-Phylum,-Class,-Order,-Family,-Genus,-Species)%>%
+  filter(Taxlifestage=="Limnoithona spp. Adult")
+Zoop_select_notLimno<-select(Zoop_select,-Taxname,-Phylum,-Class,-Order,-Family,-Genus,-Species)%>%
+  filter(Taxlifestage!="Limnoithona spp. Adult")
+Zoop_select_Limno2<-Zoop_select_Limno%>%
+  dplyr::group_by(Year,Date,seasons,Taxlifestage,Station,Source)%>%
+  dplyr::summarise(CPUE=sum(CPUE))
+Zoop_select_Limno<-unique(select(Zoop_select_Limno,-Taxlifestage,-CPUE))
+Zoop_select_Limno<-Zoop_select_Limno%>%
+  inner_join(Zoop_select_Limno2)
+Zoop_select<-Zoop_select_notLimno%>%
+  rbind(Zoop_select_Limno)
+
+#set up regimes
+t1<-data.frame(Year=1959:1986, Regime="Pre-Clam (-1986)")
+t2<-data.frame(Year=1987:2001, Regime="Pre-POD (1987-2001)")
+t3<-data.frame(Year=2002:2012, Regime="POD (2002-2012)")
+t4<-data.frame(Year=2013:2020, Regime="Climate Shift (2013-)")
+regimes<-t1%>%
+  rbind(t2,t3,t4)
+regimes$Regime<-factor(regimes$Regime,levels=c("Pre-Clam (-1986)","Pre-POD (1987-2001)","POD (2002-2012)","Climate Shift (2013-)"))
+
+Zoop_select<-Zoop_select%>%
+  left_join(regimes)
+Zoop_select<-Zoop_select%>%
+  filter(Taxlifestage%in%common_taxa)
+
+saveRDS(Zoop_select,"Data/Zoop_select.rds")
+
+#Let's do facet regression, this took a while to figure out how to do. 
+#first use this function to pull out the p-value
+lmp <- function (modelobject) {
+  coeffs<- coef(summary(modelobject))
+  p<-if (dim(coeffs)[[1]]==1) # if only one row of pvalues then NA
+    p.value <- NA
+  else 
+    p.value <- coeffs[2,4]
+  return(p)
+}
+#these next function creates the model from the dataset (d), then creates a character string with the equation, r-squared, and p-value. This is then used in the plotting
+lm_eqn = function(d){
+  m = lm(Mean_logCPUE ~ Mean_X2, d);
+  eq <- substitute(~~italic(r)^2~"="~r2*","~~italic(p-value)*"="~pvalue,
+                   list(intercept = format(coef(m)[1], digits = 2), 
+                        slope = format(coef(m)[2], digits = 2), 
+                        r2 = format(summary(m)$r.squared, digits = 3),
+                        pvalue=format(lmp(m),digits=4)))
+
+  as.character(as.expression(eq));                 
+}
+#italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2*","~~italic(p-value)*"="~pvalue
+
+
+
+#################################################
+#let's run the data grouped by survey, regime, and stratum
+#################################################
+Zoop_grouped<-Zoop_select%>%
+  group_by(Survey,Regime,Year,Stratum,seasons,Taxlifestage)%>%
+  dplyr::summarise(Mean_CPUE=mean(CPUE),Mean_X2=mean(X2),Mean_logCPUE=mean(log10CPUE))
+
+#also real quick lets set season factor order here, rather than in prior script because I'm lazy
+Zoop_grouped$seasons<-factor(Zoop_grouped$seasons,levels=c("Winter","Spring","Summer","Fall"))
+
+
+seasons<-factor(unique(Zoop_grouped$seasons))
+
+for(i in 1:length(common_taxa)){
+  taxon=common_taxa[i]
+  d<-as.data.frame(Zoop_grouped%>%filter(Taxlifestage==taxon))
+  taxa<-common_taxa[[i]]
+  for(s in 1:length(seasons)){
+    szn<-as.character(seasons[[s]])
+    d2<-d%>%
+      filter(seasons==szn)
+    eq <- ddply(d2,.(Stratum,Regime),lm_eqn) #apply lm_eqn to dataset for each Stratum
+    p <- ggplot(data = d2, aes(x = Mean_X2, y = Mean_logCPUE)) +
+      geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+      geom_point(aes())+
+      geom_smooth(se = T, method = "lm") +
+      ggtitle(paste(szn,taxon,"Monthly mean log10CPUE by X2",sep=" "))+
+      theme_classic()+
+      geom_text(data=eq,size=2.25,aes(-Inf,Inf,vjust="top",hjust="left",label=V1), parse = TRUE, inherit.aes=FALSE) + 
+      facet_grid(Regime~Stratum,scales = "free")
+    p
+    p2<-ggplot(d2, aes(sample = Mean_logCPUE))+stat_qq() + stat_qq_line()+
+      facet_grid(Regime~Stratum,scales = "free")+
+      ggtitle(paste(szn,taxon,"log transformed Q-Q plots",sep=" "))+
+      theme_classic()
+    p2
+    save_plot(paste("Figures/lm_x2_abundance_stratum/",szn,taxon,".png",sep="_"), p,base_height = 10,base_width = 16)
+    save_plot(paste("Figures/lm_x2_qq/",szn,taxon,".png",sep="_"), p2,base_height = 10,base_width = 16)
+  }
+}
+
+##Make a more targeted plot
+#focus on specific taxa, stratum, season, and regime
+
+t_str<-c("Suisun Bay","Suisun Marsh","Lower Sacramento","Lower San Joaquin","Southern Delta")
+t_tax<-"Acartiella sinensis Adult"
+t_szn<-"Fall"
+t_reg<-c("Pre-POD (1987-2001)","POD (2002-2012)","Climate Shift (2013-)")
+d<-Zoop_grouped%>%
+ #filter(Stratum%in%t_str&seasons==t_szn&Regime %in%t_reg)%>%
+  group_by(Year,seasons,Regime,Stratum)%>%
+  dplyr::summarise(Mean_X2=mean(Mean_X2),Mean_logCPUE=mean(Mean_logCPUE))
+t_eq <- ddply(d,.(Stratum,Regime),lm_eqn) #apply lm_eqn to dataset
+p<-ggplot(data = d, aes(x = Mean_X2, y = Mean_logCPUE)) +
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point()+
+  geom_smooth(se = T, method = "lm") +
+  #ggtitle(paste(t_szn,t_tax,sep=", "))+
+  theme_classic()+
+  facet_grid(Regime~Stratum,scales = "free")+
+  geom_text(data=t_eq,size=2.5,aes(-Inf,Inf,vjust="top",hjust="left",label=V1), parse = TRUE, inherit.aes=FALSE)
+p
+save_plot(paste("Figures/targeted_x2_abundance/",t_szn,"alltaxa_stratum.png",sep="_"), p,base_height = 6,base_width = 8)
+
+
+##########
+#lets test specific model assumptions
+d_target<-Zoop_grouped%>%
+  filter(seasons=="Spring"&Taxlifestage=="Bosmina longirostris Adult",Stratum=="Lower Sacramento",Regime=="Climate Shift (2013-)")
+lm_target<-lm(Mean_logCPUE~Mean_X2,d_target)
+par(mfrow = c(2, 2))
+plot(lm_target)
+par(mfrow=c(1,1))
+p<-ggplot(d_target, aes(sample = Mean_logCPUE))
+p + stat_qq() + stat_qq_line()
+
+
+
+########################
+#do the above but only by LSZ samples, not stratum
+########################
+Zoop_sal<-Zoop_select%>%
+  filter(between(SalBott,0.5,6))%>%
+  group_by(Survey,Regime,Year,seasons,Stratum,Taxlifestage)%>%
+  dplyr::summarise(Mean_CPUE=mean(CPUE),Mean_X2=mean(X2),Mean_logCPUE=mean(log10CPUE))
+Zoop_sal$seasons<-factor(Zoop_sal$seasons,levels=c("Winter","Spring","Summer","Fall"))
+seasons<-factor(unique(Zoop_sal$seasons))
+
+for(i in 1:length(common_taxa)){
+  taxon=common_taxa[i]
+  d<-as.data.frame(Zoop_sal%>%filter(Taxlifestage==taxon))
+  taxa<-common_taxa[[i]]
+  for(s in 1:length(seasons)){
+    szn<-as.character(seasons[[s]])
+    d2<-d%>%
+      filter(seasons==szn)
+    eq <- ddply(d2,.(Regime),lm_eqn) #apply lm_eqn to dataset for each Stratum
+    p <- ggplot(data = d2, aes(x = Mean_X2, y = Mean_logCPUE)) +
+      geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+      geom_point(aes(color=Stratum))+
+      geom_smooth(se = T, method = "lm") +
+      ggtitle(paste(szn,taxon,"Monthly mean log10CPUE by X2",sep=" "))+
+      theme_classic()+
+      geom_text(data=eq,size=2.25,aes(-Inf,Inf,vjust="top",hjust="left",label=V1), parse = TRUE, inherit.aes=FALSE) + 
+      facet_grid(Regime~.,scales = "free")
+    p
+    p2<-ggplot(d2, aes(sample = Mean_logCPUE))+stat_qq() + stat_qq_line()+
+      facet_grid(Regime~.,scales = "free")+
+      ggtitle(paste(szn,taxon,"log transformed Q-Q plots",sep=" "))+
+      theme_classic()
+    p2
+    save_plot(paste("Figures/lm_lsz_abundance/",szn,taxon,".png",sep="_"), p,base_height = 10,base_width = 10)
+    save_plot(paste("Figures/lm_lsz_qq/",szn,taxon,".png",sep="_"), p2,base_height = 10,base_width = 10)
+  }
+}
+#Try lsz for all taxa just recent regime
+d<-Zoop_sal%>%filter(Regime=="Climate Shift (2013-)",seasons=="Fall",Taxlifestage%in%common_taxa)%>%
+  group_by(Year,Survey,Stratum,Regime)%>%
+  dplyr::summarise(Mean_X2=mean(Mean_X2),Mean_logCPUE=mean(Mean_logCPUE))
+eq <- ddply(d,.(Regime),lm_eqn)
+p<-ggplot(d,aes(x=Mean_X2,y=Mean_logCPUE))+
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point(aes(color=Stratum))+
+  geom_text(data=eq,size=2.25,aes(-Inf,Inf,vjust="top",hjust="left",label=V1), parse = TRUE, inherit.aes=FALSE)
+p
+
+
+##########
+#let's try quadratic equations
+###########
+#first use this function to pull out the p-value
+qmp <- function (modelobject) {
+  coeffs<- coef(summary(modelobject))
+  p<-if (dim(coeffs)[[1]]==1) # if only one row of pvalues then NA
+    p.value <- NA
+  else 
+    p.value <- coeffs[2,4]
+  return(p)
+}
+#these next function creates the model from the dataset (d), then creates a character string with the equation, r-squared, and p-value. This is then used in the plotting
+qm_eqn = function(d){
+  m = lm(Mean_logCPUE ~ Mean_X2+Mean_X2_2, d);
+  eq <- substitute(~~italic(r)^2~"="~r2*","~~italic(p-value)*"="~pvalue*","~~italic(a)*"="~intercept*","~~italic(b)*"="~slope, 
+                   list(intercept = format(coef(m)[1], digits = 2), 
+                        slope = format(coef(m)[2], digits = 2), 
+                        r2 = format(summary(m)$r.squared, digits = 3),
+                        pvalue=format(lmp(m),digits=4)))
+  
+  as.character(as.expression(eq));                 
+}
+#italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2*","~~italic(p-value)*"="~pvalue
+
+Zoop_grouped<-Zoop_select%>%
+  group_by(Survey,Regime,Year,Stratum,seasons,Taxlifestage)%>%
+  dplyr::summarise(Mean_CPUE=mean(CPUE),Mean_X2=mean(X2),Mean_logCPUE=mean(log10CPUE))
+
+#also real quick lets set season factor order here, rather than in prior script because I'm lazy
+Zoop_grouped$seasons<-factor(Zoop_grouped$seasons,levels=c("Winter","Spring","Summer","Fall"))
+
+
+seasons<-factor(unique(Zoop_grouped$seasons))
+Zoop_grouped$Mean_X2_2<-Zoop_grouped$Mean_X2^2
+
+saveRDS(Zoop_grouped,("Data/Zoop_grouped.rds"))
+for(i in 1:length(common_taxa)){
+  taxon=common_taxa[i]
+  d<-as.data.frame(Zoop_grouped%>%filter(Taxlifestage==taxon))
+  taxa<-common_taxa[[i]]
+  for(s in 1:length(seasons)){
+    szn<-as.character(seasons[[s]])
+    d2<-d%>%
+      filter(seasons==szn)
+    eq <- ddply(d2,.(Stratum,Regime),qm_eqn) #apply lm_eqn to dataset for each Stratum
+    p <- ggplot(data = d2, aes(x = Mean_X2, y = Mean_logCPUE)) +
+      geom_smooth(method = "lm", se=T, color="black", formula = y ~ x + I(x^2)) +
+      geom_point(aes())+
+      ggtitle(paste(szn,taxon,"Monthly mean CPUE by X2",sep=" "))+
+      theme_classic()+
+      geom_text(data=eq,size=2.25,aes(-Inf,Inf,vjust="top",hjust="left",label=V1), parse = TRUE, inherit.aes=FALSE) + 
+      facet_grid(Regime~Stratum,scales = "free")
+    p
+    save_plot(paste("Figures/qm_x2_abundance_stratum/",szn,taxon,".png",sep="_"), p,base_height = 10,base_width = 16)
+  }
+}
+
+##########
+#let's try some gams
+###########
+library(mgcv)
+#first use this function to pull out the p-value
+gmp <- function (modelobject) {
+  coeffs<- coef(summary(modelobject))
+  p<-if (dim(coeffs)[[1]]==1) # if only one row of pvalues then NA
+    p.value <- NA
+  else 
+    p.value <- coeffs[2,4]
+  return(p)
+}
+#these next function creates the model from the dataset (d), then creates a character string with the equation, r-squared, and p-value. This is then used in the plotting
+gm_eqn = function(d2){
+  m = gam(Mean_logCPUE ~ Mean_X2, data=d2,family=nb);
+  eq <- substitute(~~italic(r)^2~"="~r2*","~~italic(p-value)*"="~pvalue,
+                   list(r2 = format(summary(m)$r.sq, digits = 3),
+                        pvalue=as.numeric(format(summary(m)$p.pv[2],digits=4))))
+  as.character(as.expression(eq));                 
+}
+gm_fit<-function(d2){
+  m = gam(Mean_logCPUE ~ Mean_X2, data=d2,family=nb);
+  prediction<-predict_gam(m)            
+}
+#italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2*","~~italic(p-value)*"="~pvalue
+
+for(i in 1:length(common_taxa)){
+  taxon=common_taxa[i]
+  d<-as.data.frame(Zoop_grouped%>%filter(Taxlifestage==taxon))
+  taxa<-common_taxa[[i]]
+  for(s in 1:length(seasons)){
+    szn<-as.character(seasons[[s]])
+    d2<-d%>%
+      filter(seasons==szn)
+    eq <- ddply(d,.(Stratum,Regime),gm_eqn) #apply gm_eqn to dataset for each Stratum and regime interaction'
+    gam<-gam(data=d2,formula=Mean_logCPUE~s(Mean_X2,by=Stratum)+s(Mean_X2,by=Regime))
+    prediction<-predict_gam(gam)
+    p <- ggplot(data = prediction, aes(x = Mean_X2, y = fit)) +
+      geom_line()+
+      geom_ribbon(aes(ymin=fit-se.fit, ymax=fit+se.fit),
+                  alpha=.2) +
+      ggtitle(paste(szn,taxon,"Monthly mean CPUE by X2",sep=" "))+
+      theme_classic()+
+      geom_hline(yintercept=0)+
+      geom_text(data=eq,size=2.25,aes(-Inf,Inf,vjust="top",hjust="left",label=V1), parse = TRUE, inherit.aes=FALSE) + 
+      facet_grid(Regime~Stratum,scales = "free")
+    p
+    save_plot(paste("Figures/gam_x2_abundance_stratum/",szn,taxon,".png",sep="_"), p,base_height = 10,base_width = 16)
+  }
+}
+
+
+#https://community.rstudio.com/t/error-extracting-p-values-from-coefficients-matrix-subscript-out-of-bounds/53503
+
+###########
+#Acartiella vs others
+##########
+acar_eqn = function(d){
+  m = lm(target_logCPUE ~ acar_logCPUE, d);
+  eq <- substitute(~~italic(r)^2~"="~r2*","~~italic(p-value)*"="~pvalue*","~~italic(a)*"="~intercept*","~~italic(b)*"="~slope, 
+                   list(intercept = format(coef(m)[1], digits = 2), 
+                        slope = format(coef(m)[2], digits = 2), 
+                        r2 = format(summary(m)$r.squared, digits = 3),
+                        pvalue=format(lmp(m),digits=4)))
+  
+  as.character(as.expression(eq));                 
+}
+
+acar_data<-dplyr::select(Zoop_grouped,Survey,Regime,Stratum,Year,seasons,Mean_X2,Mean_logCPUE,Taxlifestage)%>%
+  filter(Taxlifestage=="Acartiella sinensis Adult"&Regime!="Pre-Clam (-1986)")
+acar_data$acar_logCPUE<-acar_data$Mean_logCPUE
+target_taxa="Pseudodiaptomus_UnID Larva"
+target_data<-dplyr::select(Zoop_grouped,Survey,Regime,Stratum,Year,seasons,Mean_X2,Mean_logCPUE,Taxlifestage)%>%
+  filter(Taxlifestage==target_taxa&Regime!="Pre-Clam (-1986)")
+target_data$target_logCPUE<-target_data$Mean_logCPUE
+
+community_data<-acar_data%>%inner_join(target_data,by=c("Regime","Survey","Year","Stratum","seasons","Mean_X2"))
+
+  for(s in 1:length(seasons)){
+    szn<-as.character(seasons[[s]])
+    d2<-community_data%>%
+      filter(seasons==szn)
+    eq <- ddply(d2,.(Stratum,Regime),acar_eqn) #apply lm_eqn to dataset for each Stratum
+    p <- ggplot(data = d2, aes(x = acar_logCPUE, y = target_logCPUE)) +
+      geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+      geom_point(aes())+
+      geom_smooth(se = T, method = "lm") +
+      ggtitle(paste(szn,target_taxa,"Monthly mean log10CPUE by Acartiella density",sep=" "))+
+      theme_classic()+
+      geom_text(data=eq,size=2.25,aes(-Inf,Inf,vjust="top",hjust="left",label=V1), parse = TRUE, inherit.aes=FALSE) + 
+      facet_grid(Regime~Stratum,scales = "free")
+    p
+    save_plot(paste("Figures/acartiella_interactions/",szn,target_taxa,".png",sep="_"), p,base_height = 10,base_width = 16)
+  }
+
+
+##########################################
+#Distribution analysis
+############################################
+
+dist_center<-function(data,taxa){
+  d=data%>%
+    filter(Taxlifestage==taxa)
+  d$km_freq<-d$CPUE*d$distance_km
+  d1<-d%>%
+    group_by(Survey,seasons,Year,Taxlifestage,Regime)%>%
+    dplyr::summarize(km_center=sum(km_freq)/sum(CPUE),Mean_X2=mean(X2))
+}
+
+lm_eqn_dist = function(d){
+  m = lm(km_center ~ Mean_X2, d);
+  eq <- substitute(~~italic(r)^2~"="~r2*","~~italic(p-value)*"="~pvalue,
+                   list(intercept = format(coef(m)[1], digits = 2), 
+                        slope = format(coef(m)[2], digits = 2), 
+                        r2 = format(summary(m)$r.squared, digits = 3),
+                        pvalue=format(lmp(m),digits=4)))
+  
+  as.character(as.expression(eq));                 
+}
+
+Zoop_select$seasons<-factor(Zoop_select$seasons,levels=c("Spring","Summer","Fall"))
+for(i in 1:length(common_taxa)){
+  taxon=common_taxa[i]
+  d<-as.data.frame(Zoop_select%>%filter(Taxlifestage==taxon))
+  taxa<-common_taxa[[i]]
+  d2<-dist_center(d,taxon)
+  d2<-d2[complete.cases(d2$km_center),]
+  eq <- ddply(d2,.(Regime,seasons),lm_eqn_dist) #apply lm_eqn to dataset for each Stratum
+  p <- ggplot(data = d2, aes(x = Mean_X2, y = km_center)) +
+    geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+    geom_point()+
+    geom_smooth(se = T, method = "lm") +
+    ggtitle(paste(taxon,"Monthly center of distribution",sep=" "))+
+    theme_classic()+
+    geom_text(data=eq,size=3,aes(-Inf,Inf,vjust="top",hjust="left",label=V1), parse = TRUE, inherit.aes=FALSE) + 
+    facet_grid(Regime~seasons,scales = "free")
+  p
+  save_plot(paste("Figures/_x2_distribution/",taxon,".png",sep="_"), p,base_height = 10,base_width = 10)
+}
+
+##Make a more targeted plot
+#focus on specific taxa, stratum, season, and regime
+
+t_szn<-c("Fall")
+t_reg<-c("Pre-POD (1987-2001)","POD (2002-2012)","Climate Shift (2013-)")
+for(i in 1:length(common_taxa)){
+  t<-common_taxa[[i]]
+d<-Zoop_select%>%
+  filter(Taxlifestage==t&seasons%in%t_szn,Regime%in%t_reg)
+d2<-dist_center(d,t)
+d2<-d2[complete.cases(d2$km_center),]
+eq <- ddply(d2,.(Regime,seasons),lm_eqn_dist) #apply lm_eqn to dataset for each Stratum
+p <- ggplot(data = d2, aes(x = Mean_X2, y = km_center)) +
+  geom_smooth(method = "lm", se=FALSE, color="black", formula = y ~ x) +
+  geom_point()+
+  geom_smooth(se = T, method = "lm") +
+  ggtitle(paste(t,"Monthly center of distribution",sep=" "))+
+  theme_classic()+
+  geom_text(data=eq,size=3,aes(-Inf,Inf,vjust="top",hjust="left",label=V1), parse = TRUE, inherit.aes=FALSE) + 
+  facet_grid(Regime~seasons,scales = "free_y")
+p
+save_plot(paste("Figures/targeted_x2_distribution/",t,".png",sep="_"), p,base_height = 10,base_width = 6)
+}
+

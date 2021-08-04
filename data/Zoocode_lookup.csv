@@ -1,0 +1,68 @@
+﻿ZooCode,LifeStage,CommonName,Comments,StartYear,EndYear,NativeOrIntro,Phylum,Class,Order,Family,Genus,Species,SalinityPreference
+A_aspera,NA,Acanthomysis aspera,NA,1992,NA,NA,Arthropoda,Crustacea,Mysida,NA,NA,NA,NA
+A_hwanhaiensis,NA,Acanthomysis hwanhaiensis,NA,1993,NA,NA,Arthropoda,Crustacea,Mysida,NA,NA,NA,NA
+A_macropsis,NA,Alienacanthomysis macropsis,NA,1994,NA,NA,Arthropoda,Crustacea,Mysida,NA,NA,NA,NA
+ACARJUV,Copepodid,Acartia spp. copepodid,NA,2006,2007,N,Arthropoda,Copepoda,Calanoida,Acartiidae,Acartia,spp.,high salinity
+ACARTELA,Adult,Acartiella sinensis adult,NA,1994,2007,I,Arthropoda,Copepoda,Calanoida,Acartiidae,Acartiella,sinensis,low salinity
+ACARTIA,Adult,Acartia spp. adult,NA,1972,2007,N,Arthropoda,Copepoda,Calanoida,Acartiidae,Acartia,spp.,high salinity
+ASINEJUV,Copepodid,Acartiella sinensis copepodid,NA,2006,2007,I,Arthropoda,Copepoda,Calanoida,Acartiidae,Acartiella,sinensis,low salinity
+ASPLANCH,All,Asplanchna spp.,NA,1972,2007,NA,Rotatoria,Monogononta,Ploima,Asplanchnidae,Asplanchna,spp.,freshwater
+ACANTHO,Adult,Acanthocyclops spp. ,NA,1972,2007,N,Arthropoda,Copepoda,Cyclopoida,Cyclopidae,Acanthocyclops,spp.,freshwater
+BARNNAUP,Nauplii,barnacle nauplii,NA,1972,2007,NA,Arthropoda,Cirripedia,NA,NA,NA,NA,NA
+BOSMINA,All,Bosmina longirostris,NA,1972,2007,NA,Arthropoda,Branchiopoda,Cladocera,Bosminidae,Bosmina,longirostris,freshwater
+CALJUV,Copepodid,"calanoid copepodid, 1972-1988 and 1990 (used OCALCOP in 1989,  OTHCPDID from 1991 on)",NA,1972,1988,NA,Arthropoda,Copepoda,Calanoida,NA,NA,NA,NA
+COPNAUP,Nauplii,copepod nauplii (used OTHNAUP from 1989 on),NA,1972,1988,NA,Arthropoda,Copepoda,NA,NA,NA,NA,NA
+CRABZOEA,Zoea,crab zoea,NA,1976,2007,NA,Arthropoda,Malacostraca,Decapoda,NA,NA,NA,NA
+CUMAC,All,Cumaceans,NA,2001,2005,NA,Arthropoda,Malacostraca,Cumacea,NA,NA,NA,NA
+CYCJUV,Copepodid,"original cyclopoid copepodid, 1972-1989 ( used CYCLCOP from 1990 on, should be 1995 on)",NA,1972,1989,NA,Arthropoda,Copepoda,Cyclopoida,Cyclopidae,NA,NA,NA
+D_holmquistae,NA,Deltamysis holmquistae,NA,1979,NA,NA,Arthropoda,Crustacea,Mysida,NA,NA,NA,NA
+DAPHNIA,All,Daphnia spp.,NA,1972,2007,I,Arthropoda,Branchiopoda,Cladocera,Daphniidae,Daphnia,spp.,freshwater
+DIAPHAN,All,Diaphanosoma spp.,NA,1972,2007,NA,Arthropoda,Branchiopoda,Cladocera,Sididae,Diaphanosoma,spp.,freshwater
+DIAPTJUV,Copepodid,Diaptomidae copepodid,several genera,2006,2007,N,Arthropoda,Copepoda,Calanoida,Diaptomidae,NA,NA,freshwater
+DIAPTOM,Adult,Diaptomidae adults,several genera,1972,2007,N,Arthropoda,Copepoda,Calanoida,Diaptomidae,NA,NA,freshwater
+EURYJUV,Copepodid,Eurytemora spp. copepodid,NA,1989,2007,I,Arthropoda,Copepoda,Calanoida,Temoridae,Eurytemora,affinis,low salinity
+EURYNAUP,Nauplii,Eurytemora spp. nauplii,NA,1989,2007,I,Arthropoda,Copepoda,Calanoida,Temoridae,Eurytemora,affinis,low salinity
+EURYTEM,Adult,Eurytemora spp. adult,NA,1972,2007,I,Arthropoda,Copepoda,Calanoida,Temoridae,Eurytemora,affinis,low salinity
+H_longirostris,NA,Hyperacanthomysis longirostris,NA,1993,NA,NA,Arthropoda,Crustacea,Mysida,NA,NA,NA,NA
+HARPACT,JuvAdult,"Harpacticoids, adults and copepodids",NA,1972,2007,N,Arthropoda,Copepoda,Harpacticoida,NA,NA,NA,NA
+HARPACT,Adult,Euterpina acutifrons adult (no longer used),NA,1994,1996,N,Arthropoda,Copepoda,Harpacticoida,Euterpinidae,Euterpina,acutifrons,NA
+KERATELA,All,Keratella spp.,NA,1972,2007,NA,Rotatoria,Monogononta,Ploima,Brachionidae,Keratella,spp.,freshwater
+LIMNOJUV,Copepodid,Limnoithona spp. copepodid,NA,1995,2007,I,Arthropoda,Copepoda,Cyclopoida,Oithonidae,Limnoithona,spp.,NA
+LIMNOSINE,Adult,Limnoithona sinensis adult,NA,2007,2007,I,Arthropoda,Copepoda,Cyclopoida,Oithonidae,Limnoithona,sinensis,freshwater
+LIMNOSPP,Adult,Limnoithona spp. adult,NA,1979,2007,I,Arthropoda,Copepoda,Cyclopoida,Oithonidae,Limnoithona,spp.,NA
+LIMNOTET,Adult,Limnoithona tetraspina adult,NA,2007,2007,I,Arthropoda,Copepoda,Cyclopoida,Oithonidae,Limnoithona,tetraspina,low salinity
+N_kadiakensis,NA,Neomysis kadiakensis,NA,1980,NA,NA,Arthropoda,Crustacea,Mysida,NA,NA,NA,NA
+N_mercedis,NA,Neomysis mercedis,NA,1972,NA,NA,Arthropoda,Crustacea,Mysida,NA,NA,NA,NA
+OITHDAV,Adult,Oithona davisae adult,NA,1980,2007,I,Arthropoda,Copepoda,Cyclopoida,Oithonidae,Oithona,davisae,high salinity
+OITHJUV,Copepodid,Oithona spp. copepodid,NA,1995,2007,NA,Arthropoda,Copepoda,Cyclopoida,Oithonidae,Oithona,spp.,high salinity
+OITHSIM,Adult,Oithona similis adult,NA,1980,2007,N,Arthropoda,Copepoda,Cyclopoida,Oithonidae,Oithona,similis,high salinity
+OITHSPP,Adult,other Oithona spp. (not davisae or similis),Bigger,2007,2007,NA,Arthropoda,Copepoda,Cyclopoida,Oithonidae,Oithona,spp.,NA
+OSTRAC,All,Ostracod,NA,2002,2007,NA,Arthropoda,Ostracoda,NA,NA,NA,NA,NA
+OTHCALAD,Adult,Osphranticum labronectum adult,NA,2003,2007,N,Arthropoda,Copepoda,Calanoida,Centropagidae,Osphranticum,labronectum,freshwater
+OTHCALAD,Adult,other calanoid adults,(brackish and marine),1972,2007,N,Arthropoda,Copepoda,Calanoida,NA,NA,NA,NA
+OTHCALAD,Adult,"other calanoid adults (used 2001-05 by mistake), changed to OTHCOP",NA,2001,2005,N,Arthropoda,Copepoda,Calanoida,NA,NA,NA,NA
+OTHCALJUV,Copepodid,other calanoid copepodids,"(used 1991 on, should be OCALCOP)",1991,2007,NA,Arthropoda,Copepoda,Calanoida,NA,NA,NA,NA
+OTHCALJUV,Copepodid,other calanoid copepodids (used only in 1989),NA,1989,1989,NA,Arthropoda,Copepoda,Calanoida,NA,NA,NA,NA
+OTHCLADO,All,Ceriodaphnia spp.,NA,2001,2007,NA,Arthropoda,Branchiopoda,Cladocera,Daphniidae,Ceriodaphnia,NA,freshwater
+OTHCOPNAUP,Nauplii,other copepod nauplii,(used 1989 on),1989,2007,NA,Arthropoda,Copepoda,NA,NA,NA,NA,NA
+OTHCYCAD,Adult,other cyclopoid adults,"(now only Acanthocyclops and Cyclops spp., except A. vernalis)",1972,2007,N,Arthropoda,Copepoda,Cyclopoida,Cyclopidae,NA,NA,NA
+OTHCYCJUV,Copepodid,other cyclopoid copepodids,1990 on (should be 1995 on),1990,2007,NA,Arthropoda,Copepoda,Cyclopoida,Cyclopidae,NA,NA,NA
+OTHROT,All,other Rotifers,zoo code changed from 2 to 95 in 2011,1972,2007,NA,Rotatoria,NA,Ploima,NA,NA,NA,NA
+PDIAPFOR,Adult,Pseudodiaptomus forbesi adult,NA,1988,2007,I,Arthropoda,Copepoda,Calanoida,Pseudodiaptomidae,Pseudodiaptomus,forbesi,freshwater
+PDIAPJUV,Copepodid,Pseudodiaptomus spp. copepodid,NA,1990,2007,I,Arthropoda,Copepoda,Calanoida,Pseudodiaptomidae,Pseudodiaptomus,spp.,NA
+PDIAPMAR,Adult,Pseudodiaptomus marinus adult,NA,1988,2007,I,Arthropoda,Copepoda,Calanoida,Pseudodiaptomidae,Pseudodiaptomus,marinus,high salinity
+PDIAPNAUP,Nauplii,Pseudodiaptomus spp. nauplii,NA,2000,2007,I,Arthropoda,Copepoda,Calanoida,Pseudodiaptomidae,Pseudodiaptomus,spp.,NA
+PDIAPSPP,Adult,Pseudodiaptomus spp. adult,NA,2003,2007,I,Arthropoda,Copepoda,Calanoida,Pseudodiaptomidae,Pseudodiaptomus,spp.,NA
+PEURYAD,Adult,Pseudodiaptomus euryhalinus,(in Delta Smelt code table),2007,2007,N,Arthropoda,Copepoda,Calanoida,Pseudodiaptomidae,Pseudodiaptomus,euryhalinus,high salinity
+POLYARTH,All,Polyarthra spp.,NA,1972,2007,NA,Rotatoria,Monogononta,Ploima,Synchaetidae,Polyarthra,spp.,freshwater
+SINOCAL,Adult,Sinocalanus doerrii adult,NA,1978,2007,I,Arthropoda,Copepoda,Calanoida,Centropagidae,Sinocalanus,doerrii,freshwater
+SINOCALJUV,Copepodid,Sinocalanus doerrii copepodid,NA,1989,2007,I,Arthropoda,Copepoda,Calanoida,Centropagidae,Sinocalanus,doerrii,freshwater
+SINONAUP,Nauplii,Sinocalanus doerrii nauplii,NA,1989,2007,I,Arthropoda,Copepoda,Calanoida,Centropagidae,Sinocalanus,doerrii,freshwater
+SYNCH,All,Synchaeta spp.,NA,1972,2007,NA,Rotatoria,Monogononta,Ploima,Synchaetidae,Synchaeta,spp.,freshwater
+SYNCHBIC,All,Synchaeta bicornis,NA,1972,2007,N,Rotatoria,Monogononta,Ploima,Synchaetidae,Synchaeta,bicornis,low salinity
+TORTANUS,Adult,Tortanus spp. adult,NA,1994,2007,NA,Arthropoda,Copepoda,Calanoida,Tortanidae,Tortanus,spp.,NA
+TORTANUS,Adult,Tortanus dextrilobatus adult,NA,2007,2007,I,Arthropoda,Copepoda,Calanoida,Tortanidae,Tortanus,dextrilobatus,low salinity
+TORTANUS,Adult,Tortanus discaudatus adult,NA,2007,2007,N,Arthropoda,Copepoda,Calanoida,Tortanidae,Tortanus,discaudatus,high salinity
+TORTJUV,Copepodid,Tortanus copepodid,NA,2006,2007,NA,Arthropoda,Copepoda,Calanoida,Tortanidae,Tortanus,spp.,high salinity
+TRICHO,All,Trichocerca spp.,NA,1972,2007,NA,Rotatoria,Monogononta,Ploima,Trichocercidae,Trichocerca,spp.,freshwater
+Unidentified_mysid,NA,Unidentified mysid,NA,2007,NA,NA,Arthropoda,Crustacea,Mysida,NA,NA,NA,NA
